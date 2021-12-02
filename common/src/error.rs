@@ -4,7 +4,8 @@ use std::{io, num};
 #[derive(Debug)]
 pub enum CommonError {
     Io(io::Error),
-    Parse(num::ParseIntError),
+    IntParse(num::ParseIntError),
+    Parse(&'static str),
 }
 
 impl From<io::Error> for CommonError {
@@ -15,6 +16,6 @@ impl From<io::Error> for CommonError {
 
 impl From<num::ParseIntError> for CommonError {
     fn from(err: num::ParseIntError) -> Self {
-        CommonError::Parse(err)
+        CommonError::IntParse(err)
     }
 }

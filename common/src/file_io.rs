@@ -39,10 +39,11 @@ where
     Ok(vec)
 }
 
-pub fn transform_iter<'a, I, F, O, E>(iter: I, transformer: F) -> Result<Vec<O>, CommonError>
+pub fn transform_iter<'a, I, F, O, E, S>(iter: I, transformer: F) -> Result<Vec<O>, CommonError>
 where
-    I: Iterator<Item = &'a str>,
-    F: Fn(&str) -> Result<O, E>,
+    S: AsRef<str>,
+    I: Iterator<Item = S>,
+    F: Fn(&S) -> Result<O, E>,
     CommonError: From<E>,
 {
     let mut vec = Vec::new();
