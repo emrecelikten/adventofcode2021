@@ -1,5 +1,5 @@
-use std::{io, num};
 use std::io::Error;
+use std::{io, num};
 
 #[derive(Debug)]
 pub enum CommonError {

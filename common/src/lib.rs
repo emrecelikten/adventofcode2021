@@ -1,5 +1,5 @@
-pub mod file_io;
 pub mod error;
+pub mod file_io;
 
 #[cfg(test)]
 mod tests {

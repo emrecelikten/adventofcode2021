@@ -18,9 +18,9 @@ fn count_greater(numbers: &[i64]) -> u64 {
 }
 
 fn count_windows(numbers: &[i64]) -> u64 {
-    let sums : Vec<i64> = numbers
+    let sums: Vec<i64> = numbers
         .windows(3)
-        .map(|triple| triple.iter().sum() )
+        .map(|triple| triple.iter().sum())
         .collect();
 
     count_greater(&sums)
@@ -40,8 +40,8 @@ fn main() -> Result<(), CommonError> {
 
 #[cfg(test)]
 mod tests {
-    use common::file_io::transform_iter;
     use super::*;
+    use common::file_io::transform_iter;
 
     const TEST_DATA: &'static str = r"199
 200
@@ -67,5 +67,4 @@ mod tests {
         let count = count_windows(&numbers);
         assert_eq!(count, 5)
     }
-
 }
