@@ -44,7 +44,7 @@ fn calculate_gamma_epsilon_mul<S: AsRef<str>>(lines: &[S]) -> u64 {
 fn sieve_lines<S: AsRef<str>>(lines: &[S], most_common: bool) -> Vec<&S> {
     let mut remaining: Vec<&S> = lines.iter().collect();
     let line_length = lines[0].as_ref().len();
-    
+
     for column in 0..line_length {
         let mut most_common_col = find_most_common_bit_in_column(&remaining, column);
         if !most_common {
