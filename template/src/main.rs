@@ -1,5 +1,7 @@
-fn main() {
-    println!("Hello, world!");
+use common::error::CommonError;
+
+fn main() -> Result<(), CommonError> {
+    Ok(())
 }
 
 #[cfg(test)]
