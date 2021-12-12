@@ -25,7 +25,7 @@ impl<V: Default> SparseGrid<V> for HashGrid<V> {
     }
 
     fn get_or_insert_pos_mut(&mut self, x: usize, y: usize) -> &mut V {
-        self.entry((x, y)).or_insert(V::default())
+        self.entry((x, y)).or_insert_with(V::default)
     }
 
     fn set_pos(&mut self, x: usize, y: usize, value: V) {

@@ -2,6 +2,7 @@ use crate::error::CommonError;
 use std::fs::{read_to_string, File};
 use std::io::{self, BufRead, BufReader, Lines};
 use std::path::Path;
+use std::str::FromStr;
 
 pub fn get_lines_iterator<T>(filename: T) -> io::Result<Lines<BufReader<File>>>
 where
@@ -76,4 +77,14 @@ pub fn read_file_as_string_groups<T: AsRef<Path>>(
     let chunks = split_double_newline(file_content);
 
     Ok(chunks)
+}
+
+pub fn read_file_as_structs<O, T>(filename: T) -> Result<Vec<O>, CommonError>
+where
+    O: FromStr,
+    CommonError: From<<O as FromStr>::Err>,
+    T: AsRef<Path>,
+{
+    let lines = get_lines_iterator(filename)?;
+    transform_lines(lines, |s| O::from_str(s))
 }
