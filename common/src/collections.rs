@@ -3,6 +3,39 @@ use std::collections::{HashMap, VecDeque};
 use std::str::FromStr;
 
 pub const NEIGHBOURS_CROSS_2D: [(i32, i32); 4] = [(0, -1), (1, 0), (0, 1), (-1, 0)];
+pub const NEIGHBOURS_2D: [(i32, i32); 8] = [
+    (0, -1),
+    (1, -1),
+    (1, 0),
+    (1, 1),
+    (0, 1),
+    (-1, 1),
+    (-1, 0),
+    (-1, -1),
+];
+
+fn _get_neighbours_array<V: Default>(
+    grid: &ArrayGrid<V>,
+    x: usize,
+    y: usize,
+    neighbours: &[(i32, i32)],
+) -> Vec<(usize, usize)> {
+    let neighbours: Vec<(usize, usize)> = neighbours
+        .iter()
+        .filter_map(|(x_neigh, y_neigh)| {
+            let x_new = x as i32 + x_neigh;
+            let y_new = y as i32 + y_neigh;
+            if x_new >= 0 && x_new < grid.x_size as i32 && y_new >= 0 && y_new < grid.y_size as i32
+            {
+                Some((x_new as usize, y_new as usize))
+            } else {
+                None
+            }
+        })
+        .collect();
+
+    neighbours
+}
 
 pub trait SparseGrid<V: Default> {
     fn get_pos(&self, x: usize, y: usize) -> Option<&V>;
@@ -15,8 +48,29 @@ pub trait DenseGrid<V: Default> {
     fn get_pos(&self, x: usize, y: usize) -> &V;
     fn get_pos_mut(&mut self, x: usize, y: usize) -> &mut V;
     fn set_pos(&mut self, x: usize, y: usize, value: V);
+    fn get_neighbours(&self, x: usize, y: usize) -> Vec<(usize, usize)>;
     fn get_neighbours_cross(&self, x: usize, y: usize) -> Vec<(usize, usize)>;
     fn boundary_fill_cross(&self, x: usize, y: usize, fill: V, boundary: V) -> (usize, Self);
+    fn generic_flood_fill<FillFn, ExpandFn>(
+        &self,
+        x: usize,
+        y: usize,
+        fill_fn: FillFn,
+        expand_fn: ExpandFn,
+    ) -> (usize, Self)
+    where
+        FillFn: Fn(&mut Self, usize, usize) -> Option<usize>,
+        ExpandFn: Fn(&Self, usize, usize) -> Vec<(usize, usize)>;
+    fn generic_flood_fill_mut<FillFn, ExpandFn>(
+        &mut self,
+        x: usize,
+        y: usize,
+        fill_fn: FillFn,
+        expand_fn: ExpandFn,
+    ) -> usize
+    where
+        FillFn: Fn(&mut Self, usize, usize) -> Option<usize>,
+        ExpandFn: Fn(&Self, usize, usize) -> Vec<(usize, usize)>;
 }
 
 pub type HashGrid<V> = HashMap<(usize, usize), V>;
@@ -72,54 +126,87 @@ impl<V: Default + Clone + PartialEq> DenseGrid<V> for ArrayGrid<V> {
     // This should normally return a impl Iterator, but doing it in trait methods seems to be
     // unstable unfortunately.
     fn get_neighbours_cross(&self, x: usize, y: usize) -> Vec<(usize, usize)> {
-        let neighbours: Vec<(usize, usize)> = NEIGHBOURS_CROSS_2D
-            .iter()
-            .filter_map(|(x_neigh, y_neigh)| {
-                let x_new = x as i32 + x_neigh;
-                let y_new = y as i32 + y_neigh;
-                if x_new >= 0
-                    && x_new < self.x_size as i32
-                    && y_new >= 0
-                    && y_new < self.y_size as i32
-                {
-                    Some((x_new as usize, y_new as usize))
-                } else {
-                    None
-                }
-            })
-            .collect();
+        _get_neighbours_array(self, x, y, &NEIGHBOURS_CROSS_2D)
+    }
 
-        neighbours
+    fn get_neighbours(&self, x: usize, y: usize) -> Vec<(usize, usize)> {
+        _get_neighbours_array(self, x, y, &NEIGHBOURS_2D)
     }
 
     fn boundary_fill_cross(&self, x: usize, y: usize, fill: V, boundary: V) -> (usize, Self) {
-        let mut new_grid: ArrayGrid<V> = self.clone();
-        let mut num_filled = 0;
+        let fill_fn = |grid: &mut Self, x_cur: usize, y_cur: usize| {
+            let cur = grid.get_pos(x_cur, y_cur);
+            if cur != &boundary && cur != &fill {
+                grid.set_pos(x_cur, y_cur, fill.clone());
+                Some(1)
+            } else {
+                None
+            }
+        };
 
+        let expand_fn = |grid: &Self, x_cur: usize, y_cur: usize| {
+            let neighbours = self.get_neighbours_cross(x_cur, y_cur);
+            neighbours
+                .iter()
+                .filter(|&&(x_neigh, y_neigh)| {
+                    let neigh = grid.get_pos(x_neigh, y_neigh);
+                    neigh != &boundary && neigh != &fill
+                })
+                .cloned()
+                .collect()
+        };
+
+        self.generic_flood_fill(x, y, fill_fn, expand_fn)
+    }
+
+    fn generic_flood_fill<FillFn, ExpandFn>(
+        &self,
+        x: usize,
+        y: usize,
+        fill_fn: FillFn,
+        expand_fn: ExpandFn,
+    ) -> (usize, Self)
+    where
+        FillFn: Fn(&mut Self, usize, usize) -> Option<usize>,
+        ExpandFn: Fn(&Self, usize, usize) -> Vec<(usize, usize)>,
+    {
+        let mut new_grid: ArrayGrid<V> = self.clone();
+        (
+            new_grid.generic_flood_fill_mut(x, y, fill_fn, expand_fn),
+            new_grid,
+        )
+    }
+
+    fn generic_flood_fill_mut<FillFn, ExpandFn>(
+        &mut self,
+        x: usize,
+        y: usize,
+        fill_fn: FillFn,
+        expand_fn: ExpandFn,
+    ) -> usize
+    where
+        FillFn: Fn(&mut Self, usize, usize) -> Option<usize>,
+        ExpandFn: Fn(&Self, usize, usize) -> Vec<(usize, usize)>,
+    {
+        let mut num_filled = 0;
         let mut queue = VecDeque::new();
         queue.push_back((x, y));
-
         while !queue.is_empty() {
             let (x_cur, y_cur) = queue.pop_front().unwrap();
 
-            let cur = new_grid.get_pos(x_cur, y_cur);
-            if cur == &boundary || cur == &fill {
+            let cur_filled = fill_fn(self, x_cur, y_cur);
+            if cur_filled.is_none() {
                 continue;
             }
+            num_filled += cur_filled.unwrap();
 
-            new_grid.set_pos(x_cur, y_cur, fill.clone());
-            num_filled += 1;
-
-            let neighbours = self.get_neighbours_cross(x_cur, y_cur);
+            let neighbours = expand_fn(self, x_cur, y_cur);
             for (x_neigh, y_neigh) in neighbours {
-                let neigh = new_grid.get_pos(x_neigh, y_neigh);
-                if neigh != &boundary && neigh != &fill {
-                    queue.push_back((x_neigh, y_neigh));
-                }
+                queue.push_back((x_neigh, y_neigh));
             }
         }
 
-        (num_filled, new_grid)
+        num_filled
     }
 }
 
@@ -146,6 +233,25 @@ impl FromStr for ArrayGrid<char> {
                 underlying: result.into_boxed_slice(),
             })
         }
+    }
+}
+
+impl FromStr for ArrayGrid<i32> {
+    type Err = CommonError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        // TODO: Better
+        let char_grid: ArrayGrid<char> = ArrayGrid::from_str(s)?;
+        Ok(Self {
+            x_size: char_grid.x_size,
+            y_size: char_grid.y_size,
+            underlying: char_grid
+                .underlying
+                .iter()
+                .map(|ch| ch.to_digit(10).unwrap() as i32)
+                .collect::<Vec<i32>>()
+                .into_boxed_slice(),
+        })
     }
 }
 
@@ -210,7 +316,7 @@ mod tests {
         let data = r"1234567
 2345678";
 
-        let array_grid = ArrayGrid::from_str(data).unwrap();
+        let array_grid: ArrayGrid<char> = ArrayGrid::from_str(data).unwrap();
         assert_eq!(array_grid.x_size, 7);
         assert_eq!(array_grid.y_size, 2);
         assert_eq!(*array_grid.get_pos(2, 1), '4');
