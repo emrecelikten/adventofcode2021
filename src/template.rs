@@ -6,7 +6,7 @@ mod tests {
 
     #[test]
     fn test_dXX() {
-        println!("Day XX result #1: {}", ());
-        println!("Day XX result #2: {}", ());
+        println!("Day XX result #1: {}", 0);
+        println!("Day XX result #2: {}", 0);
     }
 }
