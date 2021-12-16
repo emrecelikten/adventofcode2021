@@ -12,8 +12,8 @@ fn flash(grid: &mut ArrayGrid<i32>, x: usize, y: usize) -> usize {
         grid.set_pos(x, y, i32::MIN);
         let neighbours = grid.get_neighbours(x, y);
         for (x_n, y_n) in neighbours {
-            let cur_neigh = grid.get_pos(x_n, y_n);
-            if *cur_neigh >= 0 {
+            let cur_neigh = *grid.get_pos(x_n, y_n);
+            if cur_neigh >= 0 {
                 grid.set_pos(x_n, y_n, cur_neigh + 1);
             }
         }

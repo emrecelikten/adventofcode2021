@@ -15,7 +15,7 @@ where
     Ok(vec)
 }
 
-pub fn transform_iter<'a, I, F, O, E, S>(iter: I, transformer: F) -> Result<Vec<O>, CommonError>
+pub fn transform_iter<I, F, O, E, S>(iter: I, transformer: F) -> Result<Vec<O>, CommonError>
 where
     S: AsRef<str>,
     I: Iterator<Item = S>,
