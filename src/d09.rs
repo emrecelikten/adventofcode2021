@@ -45,8 +45,8 @@ fn calculate_basin_size_mul(grid: &ArrayGrid<char>, minima_positions: &[CoordPai
 
 #[cfg(test)]
 mod tests {
-    use std::fs::read_to_string;
     use super::*;
+    use std::fs::read_to_string;
 
     const TEST_DATA: &str = r"2199943210
 3987894921
