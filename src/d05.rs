@@ -51,7 +51,7 @@ fn trace_line_on_grid(line: &Line, grid: &mut HashGrid<usize>) {
             let x_pos = (line.x1 as f64 - x as f64 * x_diff.signum()) as usize;
             let y_pos = (line.y1 as f64 - y) as usize;
 
-            *grid.get_or_insert_pos_mut(x_pos, y_pos) += 1;
+            *grid.get_or_insert_pos_mut(x_pos, y_pos, &0) += 1;
         }
     } else {
         for y in 0..=y_diff.abs() as usize {
@@ -61,7 +61,7 @@ fn trace_line_on_grid(line: &Line, grid: &mut HashGrid<usize>) {
             let x_pos = (line.x1 as f64 - x) as usize;
             let y_pos = (line.y1 as f64 - y as f64 * y_diff.signum()) as usize;
 
-            *grid.get_or_insert_pos_mut(x_pos, y_pos) += 1;
+            *grid.get_or_insert_pos_mut(x_pos, y_pos, &0) += 1;
         }
     }
 }
