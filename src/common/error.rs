@@ -6,6 +6,7 @@ pub enum CommonError {
     Io(io::Error),
     IntParse(num::ParseIntError),
     Parse(&'static str),
+    Dimensions(String),
 }
 
 impl From<io::Error> for CommonError {
