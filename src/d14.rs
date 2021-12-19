@@ -226,7 +226,7 @@ CN -> C";
     #[test]
     fn test_count_occurrences_from_pairs() {
         let data = parse::split_per_double_newline(TEST_DATA);
-        let polymer : Vec<char>= data[0][0].chars().collect();
+        let polymer: Vec<char> = data[0][0].chars().collect();
         let map = parse_transformations(&data[1]);
         let mut polymer_pair_counts = convert_polymer_to_pair_counts(&polymer);
         let mut element_counts = count_element_occurrences(&polymer);
